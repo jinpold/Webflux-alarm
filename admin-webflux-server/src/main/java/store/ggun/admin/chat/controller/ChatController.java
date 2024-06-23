@@ -14,7 +14,7 @@ import store.ggun.admin.chat.service.RoomService;
 @Slf4j
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api/chats")
 @RequiredArgsConstructor
 public class ChatController {
     private final RoomService roomService;
@@ -46,5 +46,4 @@ public class ChatController {
         return roomService.saveChat(chatDTO)
                 .switchIfEmpty(Mono.error(new ChatException("Room not found")));
     }
-
 }

@@ -28,17 +28,17 @@ public class FluxChatMongoConfig {
                             List.of(
                                     UserModel.builder()
                                             .email("admin2@admin")
-                                            .password("admin2")
+                                            .password("admin")
                                             .firstName("jin")
                                             .lastName("heo")
-                                            .profile("test url2")
+                                            .profile("test url")
                                             .roles(List.of(RoleModel.SUPER_ADMIN, RoleModel.ADMIN, RoleModel.USER))
                                             .build()
                             )
                     ))
                     .collectList()
                     .flatMap(users -> {
-                        UserModel user = users.get(0);
+                        UserModel user = users.get(0);  // 사용자 id 고유값을 member로 넣어줌
                         return mongoTemplate.insert(
                                 RoomModel.builder()
                                         .id("1")

@@ -1,32 +1,33 @@
 'use client';
 import { useEffect, useState, useRef, KeyboardEvent } from "react";
 
-interface Message {
+interface Notification {
   id: string;
-  roomId: string;
   message: string;
-  senderId: string;
-  senderName: string;
+  userId: string;
+  response: string;
+  adminId: string;
+  status: string;
   createdAt: string;
 }
 
-export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function NotificationPage() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const notificationsEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const eventSource = new EventSource(`http://localhost:8091/api/chats/recieve/1`);
+    const eventSource = new EventSource(`http://localhost:8091/api/notifications/admin`);
     eventSource.onopen = () => {
       console.log("SSE connection opened");
     };
     eventSource.onmessage = (event) => {
       try {
-        const newMessage: Message = JSON.parse(event.data);
-        console.log("New message", newMessage);
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        const newNotification: Notification = JSON.parse(event.data);
+        console.log("New notification", newNotification);
+        setNotifications((prevNotifications) => [...prevNotifications, newNotification]);
       } catch (error) {
-        console.error("Failed to parse message", error);
+        console.error("Failed to parse notification", error);
       }
     };
     eventSource.onerror = (e) => {
@@ -39,46 +40,46 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    notificationsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [notifications]);
 
-  const sendMessage = async () => {
+  const sendNotification = async () => {
     if (inputMessage.trim()) {
-      const message = {
+      const notification = {
         id: '1',
-        roomId: "1",
         message: inputMessage,
-        senderId: "6675316e262a1921ad5ad8a5",
-        senderName: "JIN",
+        userId: "user123",
+        response: "",
+        adminId: "admin123",
+        status: "NOTICE",
         createdAt: new Date().toISOString()
       };
-      console.log("Sending message:", message); // 로그 추가
-      await fetch(`http://localhost:8091/api/chats/send`, {
+      console.log("Sending notification:", notification);
+      await fetch(`http://localhost:8091/api/notifications/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(message),
+        body: JSON.stringify(notification),
       });
       setInputMessage('');
     }
   };
-  
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      sendMessage();
+      sendNotification();
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <h1>Chat Room</h1>
+      <h1>Notifications</h1>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '50px' }}>
-        {messages.map((msg, index) => (
-          <p key={index}><strong>{msg.senderName}:</strong> {msg.message}</p>
+        {notifications.map((notification, index) => (
+          <p key={index}><strong>{notification.adminId}:</strong> {notification.message}</p>
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={notificationsEndRef} />
       </div>
       <div style={{ position: 'fixed', height: '60px', bottom: 0, width: '100%', display: 'flex' }}>
         <input
@@ -88,7 +89,7 @@ export default function ChatPage() {
           onChange={(e) => setInputMessage(e.target.value)}
           style={{ flex: 1 }}
         />
-        <button onClick={sendMessage}>Send</button>
+        <button onClick={sendNotification}>Send</button>
       </div>
     </div>
   );

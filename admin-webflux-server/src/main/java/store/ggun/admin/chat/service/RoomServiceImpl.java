@@ -44,39 +44,38 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public Mono<ChatDTO> saveChat(ChatDTO chatDTO) {
         if (chatDTO == null || chatDTO.getRoomId() == null || chatDTO.getSenderId() == null) {
+            log.error("ChatDTO, roomId, and senderId must not be null: {}", chatDTO); // 로그 추가
             return Mono.error(new IllegalArgumentException("ChatDTO, roomId, and senderId must not be null"));
         }
 
         log.info("saveChat called with roomId: {}, senderId: {}", chatDTO.getRoomId(), chatDTO.getSenderId());
 
+
         return roomRepository.findById(chatDTO.getRoomId())
-                .switchIfEmpty(Mono.error(new ChatException("Room not found")))
-                .filter(room -> {
-                    boolean isMember = room.getMembers().contains(chatDTO.getSenderId());
-                    log.info("Room members: {}, isMember: {}", room.getMembers(), isMember);
-                    return isMember;
-                })
-                .flatMap(room -> chatRepository.save(ChatModel.builder()
-                        .roomId(chatDTO.getRoomId())
-                        .message(chatDTO.getMessage())
-                        .senderId(chatDTO.getSenderId())
-                        .senderName(chatDTO.getSenderName())
-                        .createdAt(LocalDateTime.now())
-                        .build()))
-                .map(chat -> ChatDTO.builder()
-                        .id(chat.getId())
-                        .roomId(chat.getRoomId())
-                        .senderId(chat.getSenderId())
-                        .senderName(chat.getSenderName())
-                        .message(chat.getMessage())
-                        .createdAt(chat.getCreatedAt())
-                        .build())
-                .doOnSuccess(chat -> {
-                    Sinks.Many<ServerSentEvent<ChatDTO>> sink = chatSinks.get(chat.getRoomId());
-                    if (sink != null) {
-                        sink.tryEmitNext(ServerSentEvent.builder(chat).build());
-                    }
-                });
+                    .filter(i -> i.getMembers().contains(chatDTO.getSenderId())) // senderId가 room에 속해있는지 확인
+                    .switchIfEmpty(Mono.error(new ChatException("Room not found or sender not a member")))
+                    .flatMap(i -> chatRepository.save(ChatModel.builder()
+                            .roomId(chatDTO.getRoomId())
+                            .message(chatDTO.getMessage())
+                            .senderId(chatDTO.getSenderId())
+                            .senderName(chatDTO.getSenderName())
+                            .createdAt(LocalDateTime.now())
+                            .build()))
+                    .flatMap(i -> Mono.just(ChatDTO.builder()
+                            .roomId(i.getRoomId())
+                            .senderId(i.getSenderId())
+                            .senderName(i.getSenderName())
+                            .message(i.getMessage())
+                            .createdAt(i.getCreatedAt())
+                            .build()))
+                    .doOnSuccess(i -> {
+                        if (chatSinks.containsKey(i.getRoomId())) {
+                            chatSinks.get(i.getRoomId()).tryEmitNext(ServerSentEvent.builder(i).build());
+                        } else {
+                            log.warn("No sink found for roomId: {}", i.getRoomId());
+                        }
+                    });
+
     }
 
     @Override
@@ -124,10 +123,11 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Flux<ServerSentEvent<ChatDTO>> subscribeByRoomId(String roomId) {
+    public Flux<ServerSentEvent<ChatDTO>> subscribeByRoomId(String roomId) { // roomId로 구독
         return chatSinks.computeIfAbsent(roomId, id -> {
-                    Sinks.Many<ServerSentEvent<ChatDTO>> sink = Sinks.many().replay().all();
+                    Sinks.Many<ServerSentEvent<ChatDTO>> sink = Sinks.many().replay().all(5); //5개만 저장
                     chatRepository.findByRoomId(roomId)
+                            .take(5) // 5개만 저장
                             .flatMap(chat -> Flux.just(
                                     ServerSentEvent.builder(
                                                     ChatDTO.builder()
