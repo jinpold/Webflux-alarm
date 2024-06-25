@@ -13,6 +13,7 @@ interface Message {
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
+  const [inputMessage2, setInputMessage2] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -45,14 +46,14 @@ export default function ChatPage() {
   const sendMessage = async () => {
     if (inputMessage.trim()) {
       const message = {
-        id: '1',
+        id: '2',
         roomId: "1",
         message: inputMessage,
-        senderId: "6675316e262a1921ad5ad8a5",
-        senderName: "JIN",
+        senderId: "667a63fcae8aee70a71123e6",
+        senderName: "soo",
         createdAt: new Date().toISOString()
       };
-      console.log("Sending message:", message); // 로그 추가
+      console.log("Sending message:", message);
       await fetch(`http://localhost:8091/api/chats/send`, {
         method: 'POST',
         headers: {
@@ -63,11 +64,32 @@ export default function ChatPage() {
       setInputMessage('');
     }
   };
-  
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const sendMessage2 = async () => {
+    if (inputMessage2.trim()) {
+      const message = {
+        id: '3',
+        roomId: "1",
+        message: inputMessage2,
+        senderId: "667a63fcae8aee70a71123e5",
+        senderName: "jin",
+        createdAt: new Date().toISOString()
+      };
+      console.log("Sending message:", message);
+      await fetch(`http://localhost:8091/api/chats/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
+      setInputMessage2('');
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, sendMessageFunction: () => void) => {
     if (e.key === 'Enter') {
-      sendMessage();
+      sendMessageFunction();
     }
   };
 
@@ -80,15 +102,29 @@ export default function ChatPage() {
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <div style={{ position: 'fixed', height: '60px', bottom: 0, width: '100%', display: 'flex' }}>
-        <input
-          type="text"
-          value={inputMessage}
-          onKeyDown={handleKeyDown}
-          onChange={(e) => setInputMessage(e.target.value)}
-          style={{ flex: 1 }}
-        />
-        <button onClick={sendMessage}>Send</button>
+      <div style={{ position: 'fixed', height: '120px', bottom: 0, width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <input
+            type="text"
+            value={inputMessage}
+            onKeyDown={(e) => handleKeyDown(e, sendMessage)}
+            onChange={(e) => setInputMessage(e.target.value)}
+            style={{ flex: 1 }}
+            placeholder="soo의 메시지를 입력하세요"
+          />
+          <button onClick={sendMessage}>Send (soo)</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <input
+            type="text"
+            value={inputMessage2}
+            onKeyDown={(e) => handleKeyDown(e, sendMessage2)}
+            onChange={(e) => setInputMessage2(e.target.value)}
+            style={{ flex: 1 }}
+            placeholder="jin의 메시지를 입력하세요"
+          />
+          <button onClick={sendMessage2}>Send (jin)</button>
+        </div>
       </div>
     </div>
   );

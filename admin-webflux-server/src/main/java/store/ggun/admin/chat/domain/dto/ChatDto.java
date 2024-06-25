@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatDTO {
+public class ChatDto {
     private String id;
     private String roomId;
     private String senderId;

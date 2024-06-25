@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Sinks;
-import store.ggun.admin.chat.domain.dto.ChatDTO;
+import store.ggun.admin.chat.domain.dto.ChatDto;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatConfig {
 
     @Bean
-    public Map<String, Sinks.Many<ServerSentEvent<ChatDTO>>> chatSinks() {
+    public Map<String, Sinks.Many<ServerSentEvent<ChatDto>>> chatSinks() {
         return new ConcurrentHashMap<>();
     }
 }

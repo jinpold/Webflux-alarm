@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @ToString
 @Builder
-public class NoticeDto {
+public class NotificationDto {
     private String id;
     private String message;
     private String userId; // 임직원 사용자

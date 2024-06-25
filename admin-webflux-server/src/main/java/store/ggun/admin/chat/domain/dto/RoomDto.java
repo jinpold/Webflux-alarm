@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoomDTO {
+public class RoomDto {
     private String id;
     private String title;
     private List<String> members;

@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @ToString(exclude = "id")
 @NoArgsConstructor
-public class NoticeModel {
+public class NotificationModel {
     @Id
     String id;
     String message; // user message

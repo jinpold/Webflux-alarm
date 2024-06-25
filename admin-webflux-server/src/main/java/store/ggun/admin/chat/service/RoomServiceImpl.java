@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
-import store.ggun.admin.chat.domain.dto.ChatDTO;
-import store.ggun.admin.chat.domain.dto.RoomDTO;
+import store.ggun.admin.chat.domain.dto.ChatDto;
+import store.ggun.admin.chat.domain.dto.RoomDto;
 import store.ggun.admin.chat.domain.exception.ChatException;
 import store.ggun.admin.chat.domain.model.ChatModel;
 import store.ggun.admin.chat.domain.model.RoomModel;
@@ -26,7 +26,7 @@ import store.ggun.admin.chat.repository.RoomRepository;
 public class RoomServiceImpl implements RoomService {
     private final RoomRepository roomRepository;
     private final ChatRepository chatRepository;
-    private final Map<String, Sinks.Many<ServerSentEvent<ChatDTO>>> chatSinks;
+    private final Map<String, Sinks.Many<ServerSentEvent<ChatDto>>> chatSinks;
 
     @PreDestroy
     public void close() {
@@ -34,7 +34,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Mono<RoomModel> save(RoomDTO dto) {
+    public Mono<RoomModel> save(RoomDto dto) {
         return roomRepository.save(RoomModel.builder()
                 .title(dto.getTitle())
                 .members(dto == null ? new ArrayList<>() : dto.getMembers())
@@ -42,7 +42,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Mono<ChatDTO> saveChat(ChatDTO chatDTO) {
+    public Mono<ChatDto> saveChat(ChatDto chatDTO) {
         if (chatDTO == null || chatDTO.getRoomId() == null || chatDTO.getSenderId() == null) {
             log.error("ChatDTO, roomId, and senderId must not be null: {}", chatDTO); // 로그 추가
             return Mono.error(new IllegalArgumentException("ChatDTO, roomId, and senderId must not be null"));
@@ -61,7 +61,7 @@ public class RoomServiceImpl implements RoomService {
                             .senderName(chatDTO.getSenderName())
                             .createdAt(LocalDateTime.now())
                             .build()))
-                    .flatMap(i -> Mono.just(ChatDTO.builder()
+                    .flatMap(i -> Mono.just(ChatDto.builder()
                             .roomId(i.getRoomId())
                             .senderId(i.getSenderId())
                             .senderName(i.getSenderName())
@@ -79,7 +79,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Mono<RoomModel> update(RoomDTO dto) {
+    public Mono<RoomModel> update(RoomDto dto) {
         return roomRepository.existsById(dto.getId())
                 .flatMap(exists -> roomRepository.save(RoomModel.builder()
                         .id(dto.getId())
@@ -123,14 +123,14 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Flux<ServerSentEvent<ChatDTO>> subscribeByRoomId(String roomId) { // roomId로 구독
+    public Flux<ServerSentEvent<ChatDto>> subscribeByRoomId(String roomId) { // roomId로 구독
         return chatSinks.computeIfAbsent(roomId, id -> {
-                    Sinks.Many<ServerSentEvent<ChatDTO>> sink = Sinks.many().replay().all(5); //5개만 저장
+                    Sinks.Many<ServerSentEvent<ChatDto>> sink = Sinks.many().replay().all(5); //5개만 저장
                     chatRepository.findByRoomId(roomId)
                             .take(5) // 5개만 저장
                             .flatMap(chat -> Flux.just(
                                     ServerSentEvent.builder(
-                                                    ChatDTO.builder()
+                                                    ChatDto.builder()
                                                             .id(chat.getId())
                                                             .roomId(chat.getRoomId())
                                                             .senderId(chat.getSenderId())
