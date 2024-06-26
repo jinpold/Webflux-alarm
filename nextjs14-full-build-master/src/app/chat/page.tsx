@@ -17,7 +17,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const eventSource = new EventSource(`http://localhost:8091/api/chats/recieve/1`);
+    const eventSource = new EventSource(`http://localhost:8095/api/chats/recieve/1`);
     eventSource.onopen = () => {
       console.log("SSE connection opened");
     };
@@ -46,15 +46,15 @@ export default function ChatPage() {
   const sendMessage = async () => {
     if (inputMessage.trim()) {
       const message = {
-        id: '2',
+        id: '1',
         roomId: "1",
         message: inputMessage,
-        senderId: "667a63fcae8aee70a71123e6",
+        senderId: "667bf462f0b4d14f5bcc4dfa",
         senderName: "soo",
         createdAt: new Date().toISOString()
       };
       console.log("Sending message:", message);
-      await fetch(`http://localhost:8091/api/chats/send`, {
+      await fetch(`http://localhost:8095/api/chats/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,15 +68,15 @@ export default function ChatPage() {
   const sendMessage2 = async () => {
     if (inputMessage2.trim()) {
       const message = {
-        id: '3',
+        id: '2',
         roomId: "1",
         message: inputMessage2,
-        senderId: "667a63fcae8aee70a71123e5",
+        senderId: "667bf462f0b4d14f5bcc4df9",
         senderName: "jin",
         createdAt: new Date().toISOString()
       };
       console.log("Sending message:", message);
-      await fetch(`http://localhost:8091/api/chats/send`, {
+      await fetch(`http://localhost:8095/api/chats/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -18,7 +18,7 @@ public class VisitorController {
 
     private final VisitorService visitorService;
 
-    @PostMapping("/") // 방문자 수 더하기
+    @PostMapping("/OneVisit") // 방문자 수 더하기
     public ResponseEntity<Mono<Long>> visit() {
         return ResponseEntity.ok(visitorService.incrementVisitorCount());
     }

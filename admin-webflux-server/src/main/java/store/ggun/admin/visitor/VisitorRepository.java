@@ -33,7 +33,7 @@ public class VisitorRepository {
         return redisTemplate.keys("visitorCount:" + year + "-" + month + "-*")
                 .flatMap(redisTemplate.opsForValue()::get)
                 .map(Long::parseLong)
-                .reduce(0L, Long::sum); // reduce()는 Flux 에서 방출된 모든 값을 하나로 합침 (0L은 초기값)
+                .reduce(0L, Long::sum);
     }
 
     public Mono<Map<String, Long>> getVisitorCountYearByMonth(String year) {
