@@ -17,6 +17,7 @@ services:
       - "3306:3306"
     networks:
       - test_env
+
   mongo_database:
     container_name: db-container
     image: mongo
@@ -31,6 +32,17 @@ services:
     restart: always
     ports:
       - "27017:27017"
+    networks:
+      - test_env
+
+  redis_database:
+    container_name: redis-container
+    image: redis:latest
+    volumes:
+      - ~/docker/redis/data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
     networks:
       - test_env
 

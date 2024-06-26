@@ -32,6 +32,12 @@ public class ChatController {
         return roomService.save(dto);
     }
 
+    @GetMapping("/list")
+    public Flux<RoomModel> findAllRooms() {
+        log.info("Find all rooms");
+        return roomService.findAll();
+    }
+
 
     @GetMapping("/recieve/{roomId}")
     public Flux<ServerSentEvent<ChatDto>> subscribeByRoomId(@PathVariable String roomId) {
