@@ -44,6 +44,8 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+    implementation 'org.springframework.data:spring-data-redis'
+//    implementation 'io.lettuce.core:lettuce-core'
 
     // Kafka
     implementation 'org.springframework.kafka:spring-kafka'

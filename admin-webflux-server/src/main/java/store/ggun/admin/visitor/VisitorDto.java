@@ -11,5 +11,7 @@ import lombok.NoArgsConstructor;
 public class VisitorDto {
     private String date;
     private Long count;
+    private String month;
+    private String year;
 }
 

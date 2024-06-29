@@ -16,26 +16,16 @@ public class EmailController {
 
     private final EmailServiceImpl emailServiceImpl;
 
-    @PostMapping("/send")
-    public Mono<ResponseEntity<String>> sendMail(@RequestParam("to") String to,
-                                                 @RequestParam("subject") String subject,
-                                                 @RequestParam("text") String text) {
-        return emailServiceImpl.sendEmail(to, subject, text)
+    @PostMapping("/Admin-send")
+    public Mono<ResponseEntity<String>> sendMail(@RequestBody EmailDto emailDto) {
+        return emailServiceImpl.sendEmail(emailDto.getEmail(), emailDto.getSubject(), emailDto.getMessage())
                 .thenReturn(ResponseEntity.ok("Email sent successfully"))
                 .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Failed to send mail: " + e.getMessage())));
     }
 
-    @PostMapping("/send-all")
-    public Mono<ResponseEntity<String>> sendAllMail(@RequestBody List<String> recipients,
-                                                     @RequestParam("subject") String subject,
-                                                     @RequestParam("text") String text) {
-
-        return Flux.fromIterable(recipients) //Flux.fromIterable()는 Iterable 객체를 사용하여 Flux 생성
-                .flatMap(recipient -> emailServiceImpl.sendEmail(recipient, subject, text))
-                .then(Mono.just(ResponseEntity.ok("Email sent successfully")))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Failed to send mail: " + e.getMessage())));
+    @PostMapping("/Admin-send-all")
+    public Mono<ResponseEntity<String>> sendAllMail(@RequestBody EmailDto emailDto) {
+        return emailServiceImpl.sendAllMail(emailDto.getRecipients(), emailDto.getSubject(), emailDto.getMessage());
     }
-
 }

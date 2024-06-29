@@ -14,5 +14,7 @@ public class VisitorModel {
     @Id
     private String date;
     private Long count;
+    private String month;
+    private String year;
 }
 
