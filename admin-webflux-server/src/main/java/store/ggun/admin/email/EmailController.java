@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/email")
+@RequestMapping("/emails")
 @RequiredArgsConstructor
 public class EmailController {
 

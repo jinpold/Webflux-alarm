@@ -7,6 +7,7 @@ import java.util.Map;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -19,6 +20,7 @@ import store.ggun.admin.chat.domain.model.ChatModel;
 import store.ggun.admin.chat.domain.model.RoomModel;
 import store.ggun.admin.chat.repository.ChatRepository;
 import store.ggun.admin.chat.repository.RoomRepository;
+import store.ggun.admin.common.domain.Messenger;
 
 @Slf4j
 @Service
@@ -27,6 +29,7 @@ public class RoomServiceImpl implements RoomService {
     private final RoomRepository roomRepository;
     private final ChatRepository chatRepository;
     private final Map<String, Sinks.Many<ServerSentEvent<ChatDto>>> chatSinks;
+    private final KafkaTemplate<String, ChatModel> kafkaTemplate;
 
     @PreDestroy
     public void close() {
@@ -160,5 +163,39 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public Mono<Integer> countConnection() {
         return Mono.just(chatSinks.size());
+    }
+
+    @Override
+    public Mono<Messenger> create(RoomDto dto) {
+        roomRepository.save(
+                        RoomModel.builder()
+                                .title(dto.getTitle())
+                                .members(dto.getMembers())
+                                .build()
+                )
+                .flatMap(i -> Mono.just(
+                        Messenger.builder()
+                                .message("SUCCESS")
+                                .data(i)
+                                .build()
+                ));
+        return Mono.just(new Messenger());
+    }
+
+    @Override
+    public Mono<Messenger> delete(RoomDto dto) {
+        return roomRepository.findById(dto.getId())
+                .flatMap(room -> roomRepository.delete(room)
+                        .then(Mono.just(
+                                Messenger.builder()
+                                        .message("SUCCESS")
+                                        .data(room)
+                                        .build()
+                        )))
+                .switchIfEmpty(Mono.just(
+                        Messenger.builder()
+                                .message("ROOM NOT FOUND")
+                                .build()
+                ));
     }
 }

@@ -1,7 +1,5 @@
 package store.ggun.admin.notification.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -10,57 +8,27 @@ import store.ggun.admin.notification.domain.NotificationModel;
 import store.ggun.admin.notification.repository.NotificationRepository;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class NotificationService {
 
-
     private final NotificationRepository notificationRepository;
-    private final Sinks.Many<NotificationModel> adminSink = Sinks.many().multicast().onBackpressureBuffer();
-    private final Sinks.Many<NotificationModel> userSink = Sinks.many().multicast().onBackpressureBuffer();
-    private final Sinks.Many<NotificationModel> sink = Sinks.many().multicast().onBackpressureBuffer();
+    private final Sinks.Many<NotificationModel> sink;
 
-
-    public Mono<NotificationModel> createNoticeModel(NotificationModel notice) {
-        return notificationRepository.save(notice)
-                .doOnSuccess(savedNotificationModel ->{
-                    log.info("NoticeModel created: {}", savedNotificationModel);
-                    adminSink.tryEmitNext(savedNotificationModel);
-                });
+    public NotificationService(NotificationRepository notificationRepository) {
+        this.notificationRepository = notificationRepository;
+        this.sink = Sinks.many().multicast().onBackpressureBuffer();
     }
 
-    public Mono<NotificationModel> updateNoticeModelStatus(String id, String status) {
-        return notificationRepository.findById(id)
-                .flatMap(notice -> {
-                    notice.setStatus(status);
-                    return notificationRepository.save(notice)
-                            .doOnSuccess(updatedNotificationModel -> userSink.tryEmitNext(updatedNotificationModel));
-                });
+    public Mono<Void> sendNotification(NotificationModel notification) {
+        return notificationRepository.save(notification)
+                .doOnSuccess(sink::tryEmitNext)
+                .then();
     }
 
     public Flux<NotificationModel> getAdminNoticeModels() {
-        return adminSink.asFlux();
+        return sink.asFlux().filter(notification -> "admin".equals(notification.getAdminId()));
     }
 
-    public Flux<NotificationModel> getUserNoticeModels(String userId) {
-        return userSink.asFlux().filter(notice -> notice.getUserId().equals(userId));
+    public Flux<NotificationModel> getUserNoticeModels(String adminId) {
+        return sink.asFlux().filter(notification -> adminId.equals(notification.getAdminId()));
     }
-
-    public Flux<NotificationModel> getNotificationsByAdminId(String adminId) {
-        return notificationRepository.findAll().filter(notification -> notification.getAdminId().equals(adminId));
-    }
-
-    public Mono<Void> deleteNotification(String id) {
-        return notificationRepository.deleteById(id);
-    }
-
-    public void sendNotification(NotificationModel notificationModel) {
-        sink.tryEmitNext(notificationModel);
-    }
-
-    public Flux<NotificationModel> getNotifications() {
-        return sink.asFlux();
-    }
-
-
 }

@@ -1,12 +1,11 @@
 package store.ggun.admin.security.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import store.ggun.admin.security.domain.TokenModel;
-import store.ggun.admin.security.repository.TokenRepository;
-import java.time.Instant;
-import java.util.Date;
+import java.time.Duration;
+
 
 
 @Slf4j
@@ -14,20 +13,19 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class TokenService {
 
-    private final TokenRepository tokenRepository;
+    private final ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
 
-    public void saveRefreshToken(String email, String refreshToken, long refreshTokenExpiration){
+    private final String TOKEN_PREFIX = "token:";
 
-        TokenModel token = TokenModel.builder()
-                .email(email)
-                .refreshToken(refreshToken)
-                .expiration(Date.from(Instant.now().plusSeconds(refreshTokenExpiration)))
-                .build();
+    public Mono<Boolean> saveRefreshToken(String adminId, String refreshToken, Long expirationTime) {
+        return reactiveRedisTemplate.opsForValue().set(TOKEN_PREFIX + adminId, refreshToken, Duration.ofMillis(expirationTime));
+    }
 
-        log.info("Service - TokenModel token : {}",token);
+    public Mono<String> getRefreshToken(String adminId) {
+        return reactiveRedisTemplate.opsForValue().get(TOKEN_PREFIX + adminId).cast(String.class);
+    }
 
-        tokenRepository.save(token)
-                .flatMap(i -> Mono.just(i.getRefreshToken())).subscribe();
-
+    public Mono<Boolean> deleteRefreshToken(String adminId) {
+        return reactiveRedisTemplate.opsForValue().delete(TOKEN_PREFIX + adminId);
     }
 }

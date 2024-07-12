@@ -1,89 +1,92 @@
 //package store.ggun.admin.security.service;
+//
+//import io.jsonwebtoken.Claims;
+//import io.jsonwebtoken.Jwts;
+//import io.jsonwebtoken.SignatureAlgorithm;
+//import io.jsonwebtoken.security.Keys;
+//import lombok.AllArgsConstructor;
+//import lombok.Builder;
+//import lombok.Getter;
+//import lombok.NoArgsConstructor;
+//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.stereotype.Component;
+//
+//import javax.crypto.SecretKey;
 //import java.util.Date;
-//import java.util.List;
+//import java.util.HashMap;
 //import java.util.Map;
 //import java.util.function.Function;
-//import javax.crypto.SecretKey;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.security.core.GrantedAuthority;
-//import org.springframework.security.core.userdetails.UserDetails;
-//import org.springframework.stereotype.Service;
-//import io.jsonwebtoken.Claims;
-//import io.jsonwebtoken.JwtException;
-//import io.jsonwebtoken.Jwts;
-//import io.jsonwebtoken.io.Decoders;
-//import io.jsonwebtoken.security.Keys;
-//import store.ggun.admin.security.exception.JwtAuthenticationException;
-//import store.ggun.admin.security.filter.TokenProvider;
 //
-//@Service
-//class TokenProviderImpl implements TokenProvider {
+//@Builder
+//@Getter
+//@NoArgsConstructor
+//@AllArgsConstructor
+//@Component
+//public class TokenProviderImpl {
 //
 //    @Value("${jwt.secret}")
-//    private String secretKey;
+//    private String secret;
 //
-//    @Value("${jwt.expiration}")
-//    private long tokenExpiration;
+//    @Value("${jwt.expiration.access}")
+//    private Long accessExpiration;
 //
-//    String extractUsername(String jwt){
-//        return extractClaim(jwt, Claims::getSubject);
+//    @Value("${jwt.expiration.refresh}")
+//    private Long refreshExpiration;
+//
+//    @Value("${jwt.issuer}")
+//    private String issuer;
+//
+//    private SecretKey getSigningKey() {
+//        return Keys.hmacShaKeyFor(secret.getBytes());
 //    }
 //
-//    @SuppressWarnings("unchecked")
-//    List<String> extractRoles(String jwt){
-//        return extractClaim(jwt, claims -> (List<String>) claims.get("roles"));
+//    public String extractUsername(String token) {
+//        return extractClaim(token, Claims::getSubject);
 //    }
 //
-//    @Override
-//    public String generateToken(UserDetails userDetails) {
-//        return generateToken(Map.of(), userDetails);
+//    public Date extractExpiration(String token) {
+//        return extractClaim(token, Claims::getExpiration);
 //    }
 //
-//    @Override
-//    public boolean isTokenValid(String jwt){
-//        return !isTokenExpired(jwt);
+//    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+//        final Claims claims = extractAllClaims(token);
+//        return claimsResolver.apply(claims);
 //    }
 //
-//    private boolean isTokenExpired(String jwt){
-//        return extractClaim(jwt, Claims::getExpiration).before(new Date());
+//    private Claims extractAllClaims(String token) {
+//        return Jwts.parser()
+//                .verifyWith(getSigningKey())
+//                .build()
+//                .parseSignedClaims(token)
+//                .getPayload();
 //    }
 //
-//    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-//        long currentTimeMillis = System.currentTimeMillis();
+//    private Boolean isTokenExpired(String token) {
+//        return extractExpiration(token).before(new Date());
+//    }
+//
+//    public String generateAccessToken(Admin admin) {
+//        return createToken(admin.getUsername(), accessExpiration);
+//    }
+//
+//    public String generateRefreshToken(Admin admin) {
+//        return createToken(admin.getUsername(), refreshExpiration);
+//    }
+//
+//    private String createToken(String subject, Long expirationTime) {
+//        Map<String, Object> claims = new HashMap<>();
 //        return Jwts.builder()
-//                .claims(extraClaims)
-//                .subject(userDetails.getUsername())
-//                .claim("roles", userDetails.getAuthorities().stream()
-//                        .map(GrantedAuthority::getAuthority)
-//                        .map(role -> role.substring("ROLE_".length()))
-//                        .toArray())
-//                .issuedAt(new Date(currentTimeMillis))
-//                .expiration(new Date(currentTimeMillis + tokenExpiration * 1000))
-//                .signWith(getSigningKey(), Jwts.SIG.HS256)
+//                .claims(claims)
+//                .subject(subject)
+//                .issuedAt(new Date(System.currentTimeMillis()))
+//                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+//                .signWith(getSigningKey())
 //                .compact();
 //    }
 //
-//    private <T> T extractClaim(String jwt, Function<Claims, T> claimResolver){
-//        Claims claims = extractAllClaims(jwt);
-//        return claimResolver.apply(claims);
+//    public Boolean validateToken(String token, Admin admin) {
+//        final String username = extractUsername(token);
+//        return (username.equals(admin.getUsername()) && !isTokenExpired(token));
 //    }
-//
-//    private Claims extractAllClaims(String jwt){
-//        try {
-//            return Jwts.parser()
-//                    .verifyWith(getSigningKey())
-//                    .build()
-//                    .parseSignedClaims(jwt)
-//                    .getPayload();
-//        } catch (JwtException e) {
-//            throw new JwtAuthenticationException(e.getMessage());
-//        }
-//    }
-//
-//    private SecretKey getSigningKey() {
-//        byte[] bytes = Decoders.BASE64.decode(secretKey);
-//        return Keys.hmacShaKeyFor(bytes);
-//    }
-//
 //
 //}

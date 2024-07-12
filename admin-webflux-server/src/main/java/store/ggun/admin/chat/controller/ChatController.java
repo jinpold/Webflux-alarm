@@ -10,6 +10,7 @@ import store.ggun.admin.chat.domain.dto.RoomDto;
 import store.ggun.admin.chat.domain.exception.ChatException;
 import store.ggun.admin.chat.domain.model.RoomModel;
 import store.ggun.admin.chat.service.RoomService;
+import store.ggun.admin.common.domain.Messenger;
 
 @Slf4j
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -51,5 +52,17 @@ public class ChatController {
         log.info("Send chat {}", chatDTO.toString());
         return roomService.saveChat(chatDTO)
                 .switchIfEmpty(Mono.error(new ChatException("Room not found")));
+    }
+
+    @PostMapping("/create")
+    public Mono<Messenger> create(@RequestBody RoomDto dto) {
+        log.info("Create room");
+        return roomService.create(dto);
+    }
+
+    @DeleteMapping("/delete")
+    public Mono<Messenger> deleteRoom(@RequestBody RoomDto dto) {
+        log.info("Delete room");
+        return roomService.delete(dto);
     }
 }

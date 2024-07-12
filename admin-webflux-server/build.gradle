@@ -49,6 +49,7 @@ dependencies {
 
     // Kafka
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'io.projectreactor.kafka:reactor-kafka'
 
     // Lombok
     compileOnly 'org.projectlombok:lombok'

@@ -7,6 +7,7 @@ import store.ggun.admin.chat.domain.dto.ChatDto;
 import store.ggun.admin.chat.domain.dto.RoomDto;
 import store.ggun.admin.chat.domain.model.ChatModel;
 import store.ggun.admin.chat.domain.model.RoomModel;
+import store.ggun.admin.common.domain.Messenger;
 import store.ggun.admin.common.service.CommandService;
 import store.ggun.admin.common.service.QueryService;
 
@@ -19,4 +20,6 @@ public interface RoomService extends CommandService<RoomModel, RoomDto>, QuerySe
     Flux<ChatModel> findChatsByRoomId(String roomId);
     Flux<ServerSentEvent<ChatDto>> subscribeByRoomId(String roomId);
     Mono<Integer> countConnection();
+    Mono<Messenger> create(RoomDto dto);
+    Mono<Messenger> delete(RoomDto dto);
 }
